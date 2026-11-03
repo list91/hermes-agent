@@ -1,0 +1,97 @@
+# /etc/hermes/config.yaml — MANAGED SCOPE for CoPostly (Hermes v0.22.6).
+# Buzzy's brain: it may use ONLY the tools of our MCP server «space». Rules of behaviour live in those tools and in
+# the node passports (manifest P2), not here. No secrets in this file: everything sensitive comes from container env.
+# Sources of every key: vault/scratchpad/hermes-copostly-config-notes.md (file:line at v0.22.6).
+
+model:
+  default: "${HERMES_MODEL}"            # anthropic/claude-haiku-5.5 for checks, anthropic/claude-sonnet-5.5 in production
+  provider: "${HERMES_MODEL_PROVIDER}"  # openrouter (key: OPENROUTER_API_KEY)
+  base_url: "${HERMES_MODEL_BASE_URL}"  # https://openrouter.ai/api/v1
+
+# All built-in toolsets off on every platform: an explicit [] is authoritative (fail closed).
+# Only the dynamic MCP toolset of mcp_servers.space remains.
+platform_toolsets:
+  cli: []
+  api_server: []
+  telegram: []
+  cron: []
+
+agent:
+  # Safety net, subtracted last.
+  disabled_toolsets: [terminal, file, code_execution, browser, web, search, vision, video, image_gen, video_gen,
+                      x_search, tts, skills, todo, kanban, memory, session_search, connections, clarify, delegation,
+                      cronjob, computer_use]
+  coding_context: "off"
+
+tools:
+  tool_search:
+    enabled: "off"    # the model sees mcp__space__* directly (and the board sees their real names in run events)
+
+mcp_discovery_timeout: 10.0
+
+mcp_servers:
+  space:
+    url: "${SPACE_MCP_URL}"
+    headers:
+      Authorization: "Bearer ${SPACE_MCP_TOKEN}"
+    enabled: true
+    timeout: 180            # UI actions wait for the user's board
+    connect_timeout: 30
+    trust: full             # confirmations of paid / irreversible actions are OUR mechanism (manifest P8)
+    supports_parallel_tool_calls: false
+    sampling:
+      enabled: false
+    elicitation:
+      enabled: false
+    tools:
+      resources: false
+      prompts: false
+
+# No memory, no user profile, no self-improvement, no skill authoring (manifest S1.14).
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  nudge_interval: 0
+  provider: ""
+skills:
+  creation_nudge_interval: 0
+  project_discovery: false
+  inline_shell: false
+curator:
+  enabled: false
+auxiliary:
+  background_review:
+    enabled: false
+  title_generation:
+    enabled: false
+    model_upgrade_enabled: false
+
+kanban:
+  dispatch_in_gateway: false
+  notify_in_gateway: false
+  review_dispatch: false
+cron:
+  allow_agent_scheduling: false
+webapp:
+  enabled: false
+
+approvals:
+  mode: manual
+  unattended_mode: deny
+  cron_mode: deny
+
+unauthorized_dm_behavior: ignore
+
+security:
+  redact_secrets: true
+  allow_lazy_installs: false
+updates:
+  check: false
+onboarding:
+  profile_build: "off"
+lsp:
+  enabled: false
+
+gateway:
+  api_server:
+    max_concurrent_runs: 10
